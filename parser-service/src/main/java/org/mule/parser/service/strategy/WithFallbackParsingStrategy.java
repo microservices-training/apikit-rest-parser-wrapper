@@ -6,6 +6,7 @@
  */
 package org.mule.parser.service.strategy;
 
+import java.util.concurrent.ScheduledExecutorService;
 import org.mule.apikit.model.ApiSpecification;
 import org.mule.apikit.model.api.ApiReference;
 import org.mule.parser.service.references.ReferencesResolver;
@@ -28,6 +29,11 @@ public class WithFallbackParsingStrategy implements ParsingStrategy {
     }
     ParseResult ramlResult = new RamlParsingStrategy(new ReferencesResolver(amfResult)).parse(ref);
     return new FallbackParseResult(ramlResult);
+  }
+
+  @Override
+  public void setExecutor(ScheduledExecutorService executor) {
+
   }
 
   public class FallbackParseResult implements ParseResult {

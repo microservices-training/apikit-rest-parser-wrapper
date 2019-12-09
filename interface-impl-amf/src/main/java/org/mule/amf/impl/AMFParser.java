@@ -16,6 +16,8 @@ import static java.util.stream.Collectors.toList;
 import static org.mule.amf.impl.AMFUtils.getPathAsUri;
 import static org.mule.amf.impl.DocumentParser.getParserForApi;
 
+import java.util.Optional;
+import java.util.concurrent.ScheduledExecutorService;
 import org.mule.amf.impl.loader.ExchangeDependencyResourceLoader;
 import org.mule.amf.impl.loader.ProvidedResourceLoader;
 import org.mule.amf.impl.model.AMFImpl;
@@ -49,15 +51,24 @@ import amf.client.validate.ValidationReport;
 
 public class AMFParser implements ApiParser {
 
-  private final ApiReference apiRef;
-  private final Parser parser;
-  private final WebApi webApi;
-  private final List<String> references;
+  private ApiReference apiRef;
+  private Parser parser;
+  private WebApi webApi;
+  private List<String> references;
 
   private Document consoleModel;
 
+  public AMFParser(ApiReference apiRef, boolean validate, ScheduledExecutorService executor) throws ExecutionException, InterruptedException {
+    AMF.init(Optional.of(executor)).get();
+    initialize(apiRef, validate);
+  }
+
   public AMFParser(ApiReference apiRef, boolean validate) throws ExecutionException, InterruptedException {
     AMF.init().get();
+    initialize(apiRef, validate);
+  }
+
+  private void initialize(ApiReference apiRef, boolean validate) {
     this.apiRef = apiRef;
     this.parser = initParser(apiRef);
 
