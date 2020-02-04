@@ -13,6 +13,8 @@ import static org.mule.amf.impl.model.MediaType.getMimeTypeForValue;
 import static org.mule.amf.impl.model.ScalarType.ScalarTypes.STRING_ID;
 
 import java.util.Set;
+
+import amf.client.execution.ExecutionEnvironment;
 import org.mule.amf.impl.exceptions.UnsupportedSchemaException;
 import org.mule.apikit.model.parameter.Parameter;
 import org.mule.metadata.api.model.MetadataType;
@@ -38,6 +40,7 @@ import amf.client.validate.ValidationResult;
 
 class ParameterImpl implements Parameter {
 
+  private final ExecutionEnvironment executionEnvironment;
   private AnyShape schema;
   private boolean required;
   private Set<String> scalarTypes;
@@ -45,18 +48,18 @@ class ParameterImpl implements Parameter {
   private final Map<String, PayloadValidator> payloadValidatorMap = new HashMap<>();
   private final String defaultMediaType = APPLICATION_YAML;
 
-  ParameterImpl(amf.client.model.domain.Parameter parameter) {
-    this(getSchema(parameter), parameter.required().value());
+  ParameterImpl(amf.client.model.domain.Parameter parameter, ExecutionEnvironment executionEnvironment) {
+    this(getSchema(parameter), parameter.required().value(),executionEnvironment);
   }
 
-  ParameterImpl(PropertyShape property) {
-    this(castToAnyShape(property.range()), property.minCount().value() > 0);
+  ParameterImpl(PropertyShape property , ExecutionEnvironment executionEnvironment) {
+    this(castToAnyShape(property.range()), property.minCount().value() > 0, executionEnvironment);
   }
 
-  ParameterImpl(AnyShape anyShape, boolean required) {
+  ParameterImpl(AnyShape anyShape, boolean required,ExecutionEnvironment executionEnvironment) {
     this.schema = anyShape;
     this.required = required;
-
+    this.executionEnvironment = executionEnvironment;
     List<ScalarType> typeIds = asList(ScalarType.values());
 
     this.scalarTypes = typeIds.stream().map(ScalarType::getName).collect(Collectors.toSet());
@@ -79,17 +82,17 @@ class ParameterImpl implements Parameter {
 
   private PayloadValidator resolvePayloadValidator(String mimeType, String value) {
     if (value == null) {
-      return schema.payloadValidator(mimeType).get();
+      return schema.payloadValidator(mimeType, executionEnvironment).get();
     }
     if (payloadValidatorMap.containsKey(mimeType)) {
       return payloadValidatorMap.get(mimeType);
     }
-    Optional<PayloadValidator> payloadValidator = schema.parameterValidator(mimeType);
+    Optional<PayloadValidator> payloadValidator = schema.parameterValidator(mimeType, executionEnvironment);
     if (payloadValidator.isPresent()) {
       payloadValidatorMap.put(mimeType, payloadValidator.get());
       return payloadValidator.get();
     }
-    payloadValidator = schema.parameterValidator(defaultMediaType);
+    payloadValidator = schema.parameterValidator(defaultMediaType, executionEnvironment);
     if (payloadValidator.isPresent()) {
       payloadValidatorMap.put(mimeType, payloadValidator.get());
       return payloadValidator.get();

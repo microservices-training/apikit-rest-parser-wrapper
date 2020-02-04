@@ -12,6 +12,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.mule.amf.impl.model.MediaType.getMimeTypeForValue;
 
+import amf.client.execution.ExecutionEnvironment;
 import org.mule.amf.impl.parser.rule.ApiValidationResultImpl;
 import org.mule.apikit.model.MimeType;
 import org.mule.apikit.model.parameter.Parameter;
@@ -40,11 +41,13 @@ public class MimeTypeImpl implements MimeType {
   private final Shape shape;
   private final Map<String, Optional<PayloadValidator>> payloadValidatorMap = new HashMap<>();
   private final String defaultMediaType;
+  private final ExecutionEnvironment executionEnvironment;
 
-  public MimeTypeImpl(final Payload payload) {
+  public MimeTypeImpl(final Payload payload, ExecutionEnvironment executionEnvironment) {
     this.payload = payload;
     this.shape = payload.schema();
     this.defaultMediaType = this.payload.mediaType().option().orElse(null);
+    this.executionEnvironment = executionEnvironment;
   }
 
   @Override
@@ -58,7 +61,7 @@ public class MimeTypeImpl implements MimeType {
       return null;
 
     if (shape instanceof AnyShape)
-      return ((AnyShape) shape).toJsonSchema();
+      return ((AnyShape) shape).toJsonSchema(executionEnvironment);
 
     return null;
   }
@@ -79,7 +82,7 @@ public class MimeTypeImpl implements MimeType {
       final Map<String, List<Parameter>> parameters = new LinkedHashMap<>();
 
       for (PropertyShape propertyShape : nodeShape.properties()) {
-        parameters.put(propertyShape.name().value(), singletonList(new ParameterImpl(propertyShape)));
+        parameters.put(propertyShape.name().value(), singletonList(new ParameterImpl(propertyShape, executionEnvironment)));
       }
 
       return parameters;
@@ -164,7 +167,7 @@ public class MimeTypeImpl implements MimeType {
   }
 
   private Optional<PayloadValidator> getPayloadValidator(String mediaType) {
-    return ((AnyShape) shape).payloadValidator(mediaType);
+    return ((AnyShape) shape).payloadValidator(mediaType, executionEnvironment);
   }
 
   private static List<ApiValidationResult> mapToValidationResult(ValidationReport validationReport) {

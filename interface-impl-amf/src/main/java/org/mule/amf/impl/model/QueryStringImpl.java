@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static org.mule.amf.impl.model.MediaType.APPLICATION_YAML;
 import static org.mule.amf.impl.model.MediaType.getMimeTypeForValue;
 
+import amf.client.execution.ExecutionEnvironment;
 import org.mule.amf.impl.exceptions.UnsupportedSchemaException;
 import org.mule.apikit.model.QueryString;
 import org.mule.apikit.model.parameter.Parameter;
@@ -32,14 +33,16 @@ import amf.client.validate.ValidationReport;
 
 public class QueryStringImpl implements QueryString {
 
+  private final ExecutionEnvironment executionEnvironment;
   private AnyShape schema;
   private Collection<String> scalarTypes;
 
   private final Map<String, Optional<PayloadValidator>> payloadValidatorMap = new HashMap<>();
   private final String defaultMediaType = APPLICATION_YAML;
 
-  public QueryStringImpl(AnyShape anyShape) {
+  public QueryStringImpl(AnyShape anyShape, ExecutionEnvironment executionEnvironment) {
     this.schema = anyShape;
+    this.executionEnvironment = executionEnvironment;
 
     final List<ScalarType> typeIds = asList(ScalarType.values());
 
@@ -66,10 +69,10 @@ public class QueryStringImpl implements QueryString {
 
     Optional<PayloadValidator> payloadValidator;
     if (!payloadValidatorMap.containsKey(mimeType)) {
-      payloadValidator = schema.payloadValidator(mimeType);
+      payloadValidator = schema.payloadValidator(mimeType, executionEnvironment);
 
       if (!payloadValidator.isPresent()) {
-        payloadValidator = schema.payloadValidator(defaultMediaType);
+        payloadValidator = schema.payloadValidator(defaultMediaType, executionEnvironment);
       }
 
       payloadValidatorMap.put(mimeType, payloadValidator);
@@ -110,7 +113,7 @@ public class QueryStringImpl implements QueryString {
 
     if (schema instanceof NodeShape) {
       for (PropertyShape type : ((NodeShape) schema).properties())
-        result.put(type.name().value(), new ParameterImpl(type));
+        result.put(type.name().value(), new ParameterImpl(type, executionEnvironment));
     }
     return result;
   }

@@ -8,6 +8,7 @@ package org.mule.amf.impl;
 
 import static org.apache.commons.io.FilenameUtils.getExtension;
 
+import amf.client.execution.ExecutionEnvironment;
 import org.mule.amf.impl.exceptions.ParserException;
 import org.mule.apikit.model.ApiVendor;
 import org.mule.apikit.model.api.ApiReference;
@@ -18,6 +19,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -41,6 +43,7 @@ import amf.plugins.xml.XmlValidationPlugin;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Option;
 
 public class DocumentParser {
 
@@ -87,24 +90,25 @@ public class DocumentParser {
     return handleFuture(parser.parseFileAsync(url));
   }
 
-  public static Parser getParserForApi(final ApiReference apiRef, Environment environment) {
+  public static Parser getParserForApi(final ApiReference apiRef, Environment environment, ExecutionEnvironment executionEnvironment) {
+    init(executionEnvironment);
     final ApiVendor vendor = apiRef.getVendor();
-
     switch (vendor) {
       case OAS:
       case OAS_20:
         if ("JSON".equalsIgnoreCase(apiRef.getFormat()))
-          return new Oas20Parser(environment);
+          return Oas20Parser.apply(environment, executionEnvironment);
         else
-          return new Oas20YamlParser(environment);
+          return Oas20YamlParser.apply(environment);
       case RAML_08:
-        return new Raml08Parser(environment);
+        return Raml08Parser.apply(environment);
       case RAML_10:
-        return new Raml10Parser(environment);
+        return Raml10Parser.apply(environment, executionEnvironment);
       default:
-        return new RamlParser(environment);
+        return RamlParser.apply(environment, executionEnvironment);
     }
   }
+
 
   public static WebApi getWebApi(final BaseUnit baseUnit) throws ParserException {
     final Document document = (Document) AMF.resolveRaml10(baseUnit);
@@ -160,11 +164,10 @@ public class DocumentParser {
     }
     return "";
   }
-
-  static {
+  private static void init(ExecutionEnvironment executionEnvironment){
     try {
-      AMF.init().get();
-      AMFValidatorPlugin.withEnabledValidation(true);
+      AMF.init(executionEnvironment).get();
+//      AMFValidatorPlugin.withEnabledValidation(true);
       amf.core.AMF.registerPlugin(new XmlValidationPlugin());
     } catch (final Exception e) {
       logger.error("Error initializing AMF", e);

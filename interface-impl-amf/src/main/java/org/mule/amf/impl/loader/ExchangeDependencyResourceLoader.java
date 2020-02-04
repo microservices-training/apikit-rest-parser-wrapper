@@ -19,7 +19,7 @@ import amf.client.resource.ResourceLoader;
 public class ExchangeDependencyResourceLoader implements ResourceLoader {
 
   private final File workingDir;
-  private final FileResourceLoader resourceLoader = new FileResourceLoader();
+  private final FileResourceLoader resourceLoader =  FileResourceLoader.apply();
 
   private static final Pattern DEPENDENCY_PATH_PATTERN = Pattern.compile("^exchange_modules/|/exchange_modules/");
 

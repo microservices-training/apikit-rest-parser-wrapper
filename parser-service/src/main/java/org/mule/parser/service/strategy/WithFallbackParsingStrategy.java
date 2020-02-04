@@ -20,9 +20,13 @@ import com.google.common.collect.ImmutableList;
 
 public class WithFallbackParsingStrategy implements ParsingStrategy {
   private static final AMFParsingStrategy AMF_DELEGATE = new AMFParsingStrategy();
+  private ScheduledExecutorService executor;
 
   @Override
   public ParseResult parse(ApiReference ref) {
+    if(executor != null){
+      AMF_DELEGATE.setExecutor(executor);
+    }
     ParseResult amfResult = AMF_DELEGATE.parse(ref);
     if (amfResult.success()) {
       return amfResult;
@@ -33,7 +37,7 @@ public class WithFallbackParsingStrategy implements ParsingStrategy {
 
   @Override
   public void setExecutor(ScheduledExecutorService executor) {
-
+    this.executor = executor;
   }
 
   public class FallbackParseResult implements ParseResult {
