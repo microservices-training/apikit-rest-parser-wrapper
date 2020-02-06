@@ -100,7 +100,7 @@ public class ParameterImplTest {
 
     @Test
     public void isScalar() {
-        assertFalse(queryParams.get("author").isScalar());
+        assertTrue(queryParams.get("author").isScalar());
     }
 
     @Test
