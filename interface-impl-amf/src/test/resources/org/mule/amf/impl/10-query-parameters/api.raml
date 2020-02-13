@@ -1,6 +1,22 @@
 #%RAML 1.0
 title: Illustrate query parameter variations
 
+/testNull:
+  get:
+    queryParameters:
+        nullableString:
+            type: string | nil
+            required: false
+        nonNullableString:
+            type: string
+            required: false
+        nullableInteger:
+            type: integer | nil
+            required: false
+        nonNullableInteger:
+            type: integer
+            required: false
+
 /books:
   get:
     queryParameters:
