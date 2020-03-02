@@ -97,15 +97,15 @@ public class DocumentParser {
       case OAS:
       case OAS_20:
         if ("JSON".equalsIgnoreCase(apiRef.getFormat()))
-          return Oas20Parser.apply(environment, executionEnvironment);
+          return new Oas20Parser(environment);
         else
-          return Oas20YamlParser.apply(environment);
+          return new Oas20YamlParser(environment);
       case RAML_08:
-        return Raml08Parser.apply(environment);
+        return new Raml08Parser(environment);
       case RAML_10:
-        return Raml10Parser.apply(environment, executionEnvironment);
+        return new Raml10Parser(environment);
       default:
-        return RamlParser.apply(environment, executionEnvironment);
+        return new RamlParser(environment);
     }
   }
 

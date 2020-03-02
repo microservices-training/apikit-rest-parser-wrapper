@@ -14,6 +14,8 @@ import static java.util.stream.Collectors.toMap;
 import static org.mule.apikit.ApiType.AMF;
 import static org.mule.apikit.common.RamlUtils.replaceBaseUri;
 
+import amf.client.environment.DefaultEnvironment;
+import amf.client.environment.Environment;
 import amf.client.execution.ExecutionEnvironment;
 import org.mule.apikit.ApiType;
 import org.mule.apikit.model.ApiSpecification;
@@ -176,16 +178,17 @@ public class AMFImpl implements ApiSpecification {
   }
 
   private String renderApi() {
+    Environment env = DefaultEnvironment.apply(executionEnvironment) ;
     Renderer renderer;
     switch (apiVendor) {
       case RAML_08:
-        renderer =  Raml08Renderer.apply(executionEnvironment);
+        renderer = new Raml08Renderer(env);
         break;
       case OAS_20:
-        renderer =  Oas20Renderer.apply(executionEnvironment);
+        renderer = new Oas20Renderer(env);
         break;
       default:
-        renderer =  Raml10Renderer.apply(executionEnvironment);
+        renderer = new Raml10Renderer(env);
         break;
     }
     try {
@@ -209,7 +212,7 @@ public class AMFImpl implements ApiSpecification {
   // This method should only be used by API Console... /shrug
   public String dumpAmf() {
     try {
-      return AmfGraphRenderer.apply(executionEnvironment).generateString(consoleModel).get();
+      return new AmfGraphRenderer(DefaultEnvironment.apply(executionEnvironment)).generateString(consoleModel).get();
     } catch (InterruptedException | ExecutionException e) {
       return e.getMessage();
     }
