@@ -24,22 +24,26 @@ public class ResourceImpl implements Resource {
 
   private AMFImpl amf;
   private EndPoint endPoint;
+  private String uri;
+  private String relativeUri;
   private Map<ActionType, Action> actions;
   private Map<String, Parameter> resolvedUriParameters;
 
   ResourceImpl(final AMFImpl amf, final EndPoint endPoint) {
     this.amf = amf;
     this.endPoint = endPoint;
+    this.uri = endPoint.path().value();
+    this.relativeUri = endPoint.relativePath();
   }
 
   @Override
   public String getRelativeUri() {
-    return endPoint.relativePath();
+    return relativeUri;
   }
 
   @Override
   public String getUri() {
-    return endPoint.path().value();
+    return uri;
   }
 
   @Override
