@@ -67,11 +67,7 @@ public class QueryStringImpl implements QueryString {
     }
 
     if (payloadValidator.isPresent()) {
-      try {
-        return payloadValidator.get().validate(mimeType, value).get();
-      } catch (InterruptedException | ExecutionException e) {
-        throw new RuntimeException("Unexpected Error validating request", e);
-      }
+      return payloadValidator.get().syncValidate(mimeType, value);
     } else {
       throw new RuntimeException("Unexpected Error validating request");
     }

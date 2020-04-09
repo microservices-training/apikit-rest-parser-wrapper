@@ -162,11 +162,9 @@ public class MimeTypeImpl implements MimeType {
 
     if (payloadValidator.isPresent()) {
       final ValidationReport result;
-      try {
-        result = payloadValidator.get().validate(mimeType, payload).get();
-      } catch (InterruptedException | ExecutionException e) {
-        throw new RuntimeException("Unexpected Error validating payload", e);
-      }
+
+      result = payloadValidator.get().syncValidate(mimeType, payload);
+
       return mapToValidationResult(result);
     } else {
       throw new RuntimeException("Unexpected Error validating payload");
