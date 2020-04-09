@@ -32,6 +32,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
+import static org.mule.amf.impl.model.MediaType.APPLICATION_XML;
 import static org.mule.amf.impl.model.MediaType.getMimeTypeForValue;
 
 public class MimeTypeImpl implements MimeType {
@@ -162,10 +163,14 @@ public class MimeTypeImpl implements MimeType {
 
     if (payloadValidator.isPresent()) {
       final ValidationReport result;
-      try {
-        result = payloadValidator.get().validate(mimeType, payload).get();
-      } catch (InterruptedException | ExecutionException e) {
-        throw new RuntimeException("Unexpected Error validating payload", e);
+      if (mimeType.equals(APPLICATION_XML)) {
+        try {
+          result = payloadValidator.get().validate(mimeType, payload).get();
+        } catch (InterruptedException | ExecutionException e) {
+          throw new RuntimeException("Unexpected Error validating payload", e);
+        }
+      } else {
+        result = payloadValidator.get().syncValidate(mimeType, payload);
       }
       return mapToValidationResult(result);
     } else {
